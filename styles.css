@@ -1,0 +1,440 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --ink: #17231f;
+  --muted: #6b7772;
+  --accent: #d65a3a;
+  --accent-dark: #b7462b;
+  --surface: #fffdf9;
+  --line: #e7e4dc;
+  --shadow: 0 16px 45px rgb(23 35 31 / 14%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+.app-shell {
+  height: 100%;
+}
+
+body {
+  background-color: #e7e4dc;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+.account-button {
+  align-items: center;
+  background: var(--surface);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  transition: color 160ms ease, transform 160ms ease;
+  width: 48px;
+  z-index: 1001;
+}
+
+.account-button:hover,
+.account-button:focus-visible {
+  color: var(--accent);
+  outline: 0;
+  transform: translateY(-2px);
+}
+
+.account-button svg {
+  fill: currentColor;
+  height: 25px;
+  width: 25px;
+}
+
+.login-modal {
+  align-items: flex-start;
+  background: rgb(23 35 31 / 34%);
+  display: flex;
+  inset: 0;
+  justify-content: flex-end;
+  padding: 88px 24px 24px;
+  position: absolute;
+  z-index: 1002;
+}
+
+.login-modal[hidden] {
+  display: none;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  max-width: 380px;
+  padding: 28px;
+  width: 100%;
+}
+
+.login-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.login-header h2 {
+  font-size: 1.6rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.login-form label {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.login-form input {
+  background: #f3f1eb;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--ink);
+  font: inherit;
+  margin-bottom: 8px;
+  outline: 0;
+  padding: 12px;
+}
+
+.login-form input:focus {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.login-submit {
+  background: var(--accent);
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  cursor: pointer;
+  font: 600 0.9rem 'DM Sans', sans-serif;
+  margin-top: 8px;
+  padding: 13px;
+  transition: background 160ms ease;
+}
+
+.login-submit:hover {
+  background: var(--accent-dark);
+}
+
+.restaurant-panel {
+  background: var(--surface);
+  border-radius: 0 24px 24px 0;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  height: min(100% - 48px, 920px);
+  left: 24px;
+  max-width: 430px;
+  overflow: hidden;
+  position: absolute;
+  top: 80px;
+  transition: transform 280ms ease, opacity 280ms ease;
+  width: min(34vw, 430px);
+  z-index: 1000;
+}
+
+.panel-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  padding: 32px 28px 24px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.65rem, 2.4vw, 2.2rem);
+  line-height: 1.05;
+}
+
+.panel-intro {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 10px 0 0;
+}
+
+.icon-button,
+.clear-search {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+}
+
+.icon-button {
+  font-size: 1.7rem;
+  height: 36px;
+  width: 36px;
+}
+
+.icon-button:hover,
+.clear-search:hover {
+  color: var(--accent);
+}
+
+.search-wrap {
+  align-items: center;
+  background: #f3f1eb;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  display: flex;
+  margin: 0 28px 24px;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.search-wrap:focus-within {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.search-icon {
+  color: var(--muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  margin: 0 4px 4px 14px;
+  transform: rotate(-20deg);
+}
+
+#restaurant-search {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  min-width: 0;
+  outline: 0;
+  padding: 13px 8px;
+  width: 100%;
+}
+
+#restaurant-search::placeholder {
+  color: #929b96;
+}
+
+.clear-search {
+  font-size: 1.35rem;
+  height: 34px;
+  margin-right: 7px;
+  width: 28px;
+}
+
+.results-heading {
+  align-items: baseline;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding: 21px 28px 12px;
+}
+
+.results-heading h2 {
+  font-size: 1.05rem;
+}
+
+#restaurant-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.restaurant-list {
+  overflow-y: auto;
+  padding: 0 12px 20px;
+}
+
+.restaurant-card {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  padding: 17px 16px;
+  text-align: left;
+  transition: background 160ms ease, transform 160ms ease;
+  width: 100%;
+}
+
+.restaurant-card:hover,
+.restaurant-card:focus-visible {
+  background: #fff1eb;
+  outline: 0;
+}
+
+.restaurant-card:active {
+  transform: scale(0.99);
+}
+
+.restaurant-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 7px;
+}
+
+.restaurant-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.restaurant-company {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 9px 0 0;
+  text-transform: uppercase;
+}
+
+.empty-state {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 18px 28px;
+}
+
+.show-panel {
+  align-items: center;
+  background: var(--surface);
+  border: 0;
+  border-radius: 0 14px 14px 0;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font: 600 0.85rem 'DM Sans', sans-serif;
+  gap: 9px;
+  left: 0;
+  opacity: 0;
+  padding: 14px 17px 14px 13px;
+  pointer-events: none;
+  position: absolute;
+  top: 80px;
+  transform: translateX(-10px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 999;
+}
+
+.show-panel:hover {
+  color: var(--accent);
+}
+
+.app-shell.panel-collapsed .restaurant-panel {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(-100% - 32px));
+}
+
+.app-shell.panel-collapsed .show-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@media (max-width: 700px) {
+  .account-button {
+    right: 16px;
+    top: 16px;
+  }
+
+  .login-modal {
+    align-items: flex-start;
+    justify-content: center;
+    padding: 76px 16px 16px;
+  }
+
+  .restaurant-panel {
+    border-radius: 0;
+    height: 100%;
+    left: 0;
+    max-width: none;
+    top: 0;
+    width: 100%;
+  }
+
+  .panel-header {
+    padding: 26px 22px 20px;
+  }
+
+  .search-wrap {
+    margin: 0 22px 20px;
+  }
+
+  .results-heading {
+    padding: 18px 22px 10px;
+  }
+
+  .restaurant-list {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .app-shell.panel-collapsed .restaurant-panel {
+    transform: translateY(100%);
+  }
+
+  .show-panel {
+    border-radius: 14px 14px 0 0;
+    bottom: 0;
+    left: 50%;
+    padding: 13px 19px;
+    top: auto;
+    transform: translate(-50%, 10px);
+  }
+
+  .app-shell.panel-collapsed .show-panel {
+    transform: translate(-50%, 0);
+  }
+}
