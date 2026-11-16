@@ -49,6 +49,32 @@
       </div>
     </section>
 
+    <section class="menu-modal" id="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-title" hidden>
+      <div class="menu-card">
+        <div class="menu-header">
+          <div>
+            <p class="eyebrow">Daily menu</p>
+            <h2 id="menu-title"></h2>
+            <p class="menu-address" id="menu-address"></p>
+          </div>
+          <button class="icon-button" id="close-menu" type="button" aria-label="Close daily menu">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="menu-type-buttons" role="group" aria-label="Menu period">
+          <button class="menu-type-button is-active" id="daily-menu-button" type="button">Daily menu</button>
+          <button class="menu-type-button" id="weekly-menu-button" type="button">Weekly menu</button>
+        </div>
+        <div class="menu-language-buttons" role="group" aria-label="Menu language">
+          <button class="menu-language-button is-active" id="english-menu-button" type="button"
+            aria-label="Show menu in English" title="English">🇬🇧</button>
+          <button class="menu-language-button" id="finnish-menu-button" type="button"
+            aria-label="Näytä ruokalista suomeksi" title="Suomi">🇫🇮</button>
+        </div>
+        <div class="menu-content" id="menu-content" aria-live="polite"></div>
+      </div>
+    </section>
+
     <aside class="restaurant-panel" id="restaurant-panel" aria-label="Restaurant search">
       <div class="panel-header">
         <div>
@@ -73,7 +99,7 @@
         <span id="restaurant-count" aria-live="polite"></span>
       </div>
       <div class="restaurant-list" id="restaurant-list" role="list"></div>
-      <p class="empty-state" id="empty-state" hidden>No restaurants match your search.</p>
+      <p class="empty-state" id="empty-state">Loading restaurants...</p>
     </aside>
 
     <button class="show-panel" id="show-panel" type="button">
