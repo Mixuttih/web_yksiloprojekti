@@ -30,7 +30,7 @@
       <div class="login-card">
         <div class="login-header">
           <div>
-            <p class="eyebrow">Welcome back</p>
+            <p class="eyebrow" id="auth-eyebrow">Welcome back</p>
             <h2 id="login-title">Log in</h2>
           </div>
           <button class="icon-button" id="close-login" type="button" aria-label="Close login form">
@@ -44,8 +44,20 @@
           <label for="login-password">Password</label>
           <input id="login-password" name="password" type="password" autocomplete="current-password" required>
 
-          <button class="login-submit" type="submit">Log in</button>
+          <label for="login-password-confirm" id="password-confirm-label" hidden>Confirm password</label>
+          <input id="login-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" hidden>
+
+          <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+          <button class="login-submit" id="auth-submit" type="submit">Log in</button>
         </form>
+        <p class="auth-switch">
+          <span id="auth-switch-prompt">New here?</span>
+          <button class="auth-switch-button" id="auth-switch-button" type="button">Create an account</button>
+        </p>
+        <div class="logged-in-view" id="logged-in-view" hidden>
+          <p class="auth-message" id="logged-in-message"></p>
+          <button class="login-submit logout-button" id="logout-button" type="button">Log out</button>
+        </div>
       </div>
     </section>
 
@@ -57,9 +69,13 @@
             <h2 id="menu-title"></h2>
             <p class="menu-address" id="menu-address"></p>
           </div>
-          <button class="icon-button" id="close-menu" type="button" aria-label="Close daily menu">
-            <span aria-hidden="true">&times;</span>
-          </button>
+          <div class="menu-header-actions">
+            <button class="favorite-button menu-favorite-button" id="menu-favorite-button" type="button"
+              aria-label="Favorite restaurant" aria-pressed="false">☆</button>
+            <button class="icon-button" id="close-menu" type="button" aria-label="Close daily menu">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
         </div>
         <div class="menu-type-buttons" role="group" aria-label="Menu period">
           <button class="menu-type-button is-active" id="daily-menu-button" type="button">Daily menu</button>
@@ -91,8 +107,11 @@
         <label class="sr-only" for="restaurant-search">Search restaurants</label>
         <span class="search-icon" aria-hidden="true">&#9906;</span>
         <input id="restaurant-search" type="search" placeholder="Search by name, city or company" autocomplete="off">
+        <button class="location-button" id="find-nearest" type="button" aria-label="Find nearest restaurant"
+          title="Find nearest restaurant">&#8982;</button>
         <button class="clear-search" id="clear-search" type="button" aria-label="Clear search">&times;</button>
       </div>
+      <p class="location-message" id="location-message" role="status" aria-live="polite"></p>
 
       <div class="results-heading">
         <h2>Restaurants</h2>

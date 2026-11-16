@@ -112,6 +112,12 @@ body {
   justify-content: space-between;
 }
 
+.menu-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
 .menu-header h2 {
   font-size: 1.6rem;
   max-width: 430px;
@@ -235,6 +241,11 @@ body {
   margin-top: 24px;
 }
 
+.login-form[hidden],
+.auth-switch[hidden] {
+  display: none;
+}
+
 .login-form label {
   font-size: 0.82rem;
   font-weight: 600;
@@ -256,6 +267,18 @@ body {
   border-color: var(--accent);
 }
 
+.auth-message {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 2px 0 0;
+  min-height: 1.15em;
+}
+
+.auth-message.is-error {
+  color: var(--accent-dark);
+}
+
 .login-submit {
   background: var(--accent);
   border: 0;
@@ -270,6 +293,39 @@ body {
 
 .login-submit:hover {
   background: var(--accent-dark);
+}
+
+.auth-switch {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 20px 0 0;
+  text-align: center;
+}
+
+.auth-switch-button {
+  background: transparent;
+  border: 0;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.auth-switch-button:hover {
+  text-decoration: underline;
+}
+
+.logged-in-view {
+  margin-top: 24px;
+}
+
+.logged-in-view .auth-message {
+  text-align: center;
+}
+
+.logout-button {
+  width: 100%;
 }
 
 .restaurant-panel {
@@ -340,8 +396,42 @@ h1 {
 }
 
 .icon-button:hover,
-.clear-search:hover {
+.clear-search:hover,
+.location-button:hover {
   color: var(--accent);
+}
+
+.favorite-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 1.65rem;
+  height: 36px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: color 160ms ease, transform 160ms ease;
+  width: 36px;
+}
+
+.favorite-button:hover,
+.favorite-button:focus-visible,
+.favorite-button.is-favorite {
+  color: var(--accent);
+}
+
+.favorite-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.favorite-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .search-wrap {
@@ -367,6 +457,31 @@ h1 {
   transform: rotate(-20deg);
 }
 
+.location-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 1.3rem;
+  height: 34px;
+  justify-content: center;
+  padding: 0;
+  width: 30px;
+}
+
+.location-button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.location-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 #restaurant-search {
   background: transparent;
   border: 0;
@@ -387,6 +502,18 @@ h1 {
   height: 34px;
   margin-right: 7px;
   width: 28px;
+}
+
+.location-message {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin: -14px 28px 18px;
+  min-height: 1.1em;
+}
+
+.location-message.is-error {
+  color: var(--accent-dark);
 }
 
 .results-heading {
@@ -416,22 +543,53 @@ h1 {
   border: 0;
   border-bottom: 1px solid var(--line);
   color: inherit;
-  cursor: pointer;
-  display: block;
-  padding: 17px 16px;
+  display: flex;
   text-align: left;
   transition: background 160ms ease, transform 160ms ease;
   width: 100%;
 }
 
-.restaurant-card:hover,
-.restaurant-card:focus-visible {
+.restaurant-card:hover {
   background: #fff1eb;
-  outline: 0;
+}
+
+.restaurant-card.is-nearest {
+  background: #fff1eb;
+  border-left: 3px solid var(--accent);
+}
+
+.nearest-label {
+  color: var(--accent);
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
 }
 
 .restaurant-card:active {
   transform: scale(0.99);
+}
+
+.restaurant-card-main {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  min-width: 0;
+  padding: 17px 8px 17px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.restaurant-card-main:focus-visible {
+  outline: 0;
+}
+
+.restaurant-card .favorite-button {
+  margin: 13px 10px 0 0;
 }
 
 .restaurant-name {
