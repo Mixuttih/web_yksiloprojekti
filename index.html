@@ -38,8 +38,11 @@
           </button>
         </div>
         <form class="login-form" id="login-form">
-          <label for="login-email">Email</label>
-          <input id="login-email" name="email" type="email" autocomplete="email" required>
+          <label for="login-username">Username</label>
+          <input id="login-username" name="username" type="text" autocomplete="username" required>
+
+          <label for="login-email" id="email-label" hidden>Email</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" hidden>
 
           <label for="login-password">Password</label>
           <input id="login-password" name="password" type="password" autocomplete="current-password" required>
@@ -56,7 +59,28 @@
         </p>
         <div class="logged-in-view" id="logged-in-view" hidden>
           <p class="auth-message" id="logged-in-message"></p>
+          <button class="auth-switch-button account-settings-toggle" id="account-settings-toggle"
+            type="button" aria-expanded="false" aria-controls="account-settings">Account settings</button>
           <button class="login-submit logout-button" id="logout-button" type="button">Log out</button>
+        </div>
+        <div class="account-settings" id="account-settings" hidden>
+          <h3>Account settings</h3>
+          <form class="login-form" id="account-settings-form">
+            <label for="account-email">Email</label>
+            <input id="account-email" name="email" type="email" autocomplete="email" required>
+
+            <label for="account-password">New password</label>
+            <input id="account-password" name="password" type="password" autocomplete="new-password">
+
+            <label for="account-password-confirm">Confirm new password</label>
+            <input id="account-password-confirm" name="passwordConfirm" type="password"
+              autocomplete="new-password">
+
+            <p class="auth-message" id="account-settings-message" role="status" aria-live="polite"></p>
+            <button class="login-submit" id="account-settings-submit" type="submit">Save changes</button>
+            <button class="auth-switch-button account-settings-cancel" id="account-settings-cancel"
+              type="button">Cancel</button>
+          </form>
         </div>
       </div>
     </section>

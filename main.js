@@ -1,6 +1,7 @@
 let restaurants = [];
 const RESTAURANTS_API_URL = 'https://media2.edu.metropolia.fi/restaurant/api/v1/restaurants';
 const MENU_API_BASE_URL = 'https://media2.edu.metropolia.fi/restaurant/api/v1/restaurants';
+const AUTH_API_BASE_URL = 'https://media2.edu.metropolia.fi/restaurant/api/v1';
 
 const appShell = document.querySelector('.app-shell');
 const restaurantList = document.querySelector('#restaurant-list');
@@ -24,8 +25,20 @@ const authMessage = document.querySelector('#auth-message');
 const authSubmit = document.querySelector('#auth-submit');
 const authSwitchPrompt = document.querySelector('#auth-switch-prompt');
 const authSwitchButton = document.querySelector('#auth-switch-button');
+const usernameInput = document.querySelector('#login-username');
+const emailLabel = document.querySelector('#email-label');
+const emailInput = document.querySelector('#login-email');
 const loggedInView = document.querySelector('#logged-in-view');
 const loggedInMessage = document.querySelector('#logged-in-message');
+const accountSettingsToggle = document.querySelector('#account-settings-toggle');
+const accountSettings = document.querySelector('#account-settings');
+const accountSettingsForm = document.querySelector('#account-settings-form');
+const accountEmailInput = document.querySelector('#account-email');
+const accountPasswordInput = document.querySelector('#account-password');
+const accountPasswordConfirmInput = document.querySelector('#account-password-confirm');
+const accountSettingsMessage = document.querySelector('#account-settings-message');
+const accountSettingsSubmit = document.querySelector('#account-settings-submit');
+const accountSettingsCancel = document.querySelector('#account-settings-cancel');
 const logoutButton = document.querySelector('#logout-button');
 const menuModal = document.querySelector('#menu-modal');
 const closeMenuButton = document.querySelector('#close-menu');
@@ -43,10 +56,9 @@ let selectedMenuType = 'daily';
 let selectedMenuLanguage = 'en';
 let authMode = 'login';
 let nearestRestaurantId = null;
+let favouriteRestaurantId = null;
 
-const USERS_STORAGE_KEY = 'studentRestaurantUsers';
 const SESSION_STORAGE_KEY = 'studentRestaurantSession';
-const FAVORITES_STORAGE_KEY = 'studentRestaurantFavorites';
 
 const map = L.map('map');
 
@@ -201,15 +213,20 @@ loginModal.addEventListener('click', event => {
   }
 });
 
-loginForm.addEventListener('submit', event => {
+loginForm.addEventListener('submit', async event => {
   event.preventDefault();
+  authSubmit.disabled = true;
 
   const formData = new FormData(loginForm);
-  const email = normalizeEmail(formData.get('email'));
-  const password = formData.get('password');
+  const username = String(formData.get('username') || '').trim();
+  const email = String(formData.get('email') || '').trim();
+  const password = String(formData.get('password') || '');
 
   try {
-    const users = getUsers();
+    if (!username || !password || (authMode === 'register' && !email)) {
+      showAuthMessage('Please complete all required fields.', true);
+      return;
+    }
 
     if (authMode === 'register') {
       const passwordConfirm = formData.get('passwordConfirm');
@@ -218,23 +235,38 @@ loginForm.addEventListener('submit', event => {
         return;
       }
 
-      if (users.some(user => user.email === email)) {
-        showAuthMessage('An account with this email already exists.', true);
+      const availabilityResponse = await fetch(
+        `${AUTH_API_BASE_URL}/users/available/${encodeURIComponent(username)}`,
+      );
+      if (!availabilityResponse.ok) {
+        throw new Error(`Username availability request failed with status ${availabilityResponse.status}`);
+      }
+
+      const availability = await availabilityResponse.json();
+      if (availability.available !== true) {
+        showAuthMessage('That username is already in use.', true);
         return;
       }
 
-      users.push({email, password});
-      saveUsers(users);
-      setSession(email);
+      const registerResponse = await requestAuth('/users', {
+        method: 'POST',
+        body: JSON.stringify({username, password, email}),
+      });
+      if (!registerResponse.ok) {
+        throw new Error(await getApiError(registerResponse, 'Registration failed.'));
+      }
+
+      const registration = await registerResponse.json();
+      if (registration.data && registration.data.activated === false) {
+        loginForm.reset();
+        showAuthMessage('Account created. Please activate it using the email from the service.');
+        return;
+      }
+
+      await login(username, password);
       showAuthMessage('Account created. You are now logged in.');
     } else {
-      const user = users.find(account => account.email === email && account.password === password);
-      if (!user) {
-        showAuthMessage('Incorrect email or password.', true);
-        return;
-      }
-
-      setSession(user.email);
+      await login(username, password);
       showAuthMessage('You are now logged in.');
     }
 
@@ -243,95 +275,183 @@ loginForm.addEventListener('submit', event => {
     renderRestaurantList(searchInput.value);
   } catch (error) {
     console.error(error);
-    showAuthMessage('Authentication is unavailable in this browser. Please try again later.', true);
+    showAuthMessage(error.message || 'Authentication is unavailable. Please try again later.', true);
+  } finally {
+    authSubmit.disabled = false;
   }
 });
 
 authSwitchButton.addEventListener('click', () => {
   authMode = authMode === 'login' ? 'register' : 'login';
   renderAuthView();
-  document.querySelector('#login-email').focus();
+  usernameInput.focus();
 });
 
 logoutButton.addEventListener('click', () => {
   try {
-    localStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    favouriteRestaurantId = null;
+    accountSettings.hidden = true;
+    accountSettingsToggle.setAttribute('aria-expanded', 'false');
+    accountSettingsForm.reset();
     authMode = 'login';
     renderAuthView();
     renderRestaurantList(searchInput.value);
-    document.querySelector('#login-email').focus();
+    usernameInput.focus();
   } catch (error) {
     console.error(error);
     showAuthMessage('Unable to log out. Please try again later.', true);
   }
 });
 
-function normalizeEmail(value) {
-  return String(value || '').trim().toLocaleLowerCase();
-}
+accountSettingsToggle.addEventListener('click', () => {
+  accountSettingsToggle.setAttribute('aria-expanded', 'true');
+  loggedInView.hidden = true;
+  accountSettings.hidden = false;
+  authEyebrow.textContent = 'Your account';
+  loginTitle.textContent = 'Account settings';
+  populateAccountSettings();
+  accountEmailInput.focus();
+});
 
-function getUsers() {
-  const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-  if (!storedUsers) {
-    return [];
+accountSettingsCancel.addEventListener('click', () => {
+  accountSettingsForm.reset();
+  accountSettings.hidden = true;
+  accountSettingsToggle.setAttribute('aria-expanded', 'false');
+  loggedInView.hidden = false;
+  authEyebrow.textContent = 'Your account';
+  loginTitle.textContent = 'You are logged in';
+  showAccountSettingsMessage('');
+  accountSettingsToggle.focus();
+});
+
+accountSettingsForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  accountSettingsSubmit.disabled = true;
+
+  const session = getSession();
+  const formData = new FormData(accountSettingsForm);
+  const email = String(formData.get('email') || '').trim();
+  const password = String(formData.get('password') || '');
+  const passwordConfirm = String(formData.get('passwordConfirm') || '');
+
+  try {
+    if (!email) {
+      showAccountSettingsMessage('Email is required.', true);
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      showAccountSettingsMessage('Passwords do not match.', true);
+      return;
+    }
+
+    const body = {email};
+    if (password) {
+      body.password = password;
+    }
+
+    if (!session || (!password && email === session.user.email)) {
+      showAccountSettingsMessage('Enter a new email or password to save changes.', true);
+      return;
+    }
+
+    const response = await requestAuth('/users', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      throw new Error(await getApiError(response, 'Account settings could not be updated.'));
+    }
+
+    const responseBody = await response.text();
+    const result = responseBody ? JSON.parse(responseBody) : null;
+    const updatedUser = result && result.data ? result.data : {...session.user, email};
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+      token: session.token,
+      user: updatedUser,
+    }));
+    setFavouriteRestaurant(updatedUser);
+    accountPasswordInput.value = '';
+    accountPasswordConfirmInput.value = '';
+    loggedInMessage.textContent = updatedUser.username;
+    showAccountSettingsMessage('Account settings updated.');
+    renderRestaurantList(searchInput.value);
+  } catch (error) {
+    console.error(error);
+    showAccountSettingsMessage(error.message || 'Account settings could not be updated.', true);
+  } finally {
+    accountSettingsSubmit.disabled = false;
+  }
+});
+
+async function requestAuth(path, options = {}) {
+  const headers = new Headers(options.headers);
+  headers.set('Content-Type', 'application/json');
+  const token = getSession()?.token;
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const users = JSON.parse(storedUsers);
-  if (!Array.isArray(users) || users.some(user => !user || typeof user.email !== 'string' || typeof user.password !== 'string')) {
-    throw new Error('Stored users are invalid');
+  return fetch(`${AUTH_API_BASE_URL}${path}`, {...options, headers});
+}
+
+async function getApiError(response, fallbackMessage) {
+  try {
+    const result = await response.json();
+    return result.message || result.error || fallbackMessage;
+  } catch (error) {
+    return `${fallbackMessage} (HTTP ${response.status})`;
+  }
+}
+
+async function login(username, password) {
+  const response = await requestAuth('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({username, password}),
+  });
+  if (!response.ok) {
+    throw new Error(await getApiError(response, 'Incorrect username or password.'));
   }
 
-  return users;
-}
+  const result = await response.json();
+  if (!result.token || !result.data) {
+    throw new Error('The login API returned an invalid response.');
+  }
 
-function saveUsers(users) {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-}
-
-function setSession(email) {
-  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({email}));
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+    token: result.token,
+    user: result.data,
+  }));
+  setFavouriteRestaurant(result.data);
 }
 
 function getSession() {
-  const storedSession = localStorage.getItem(SESSION_STORAGE_KEY);
-  return storedSession ? JSON.parse(storedSession) : null;
+  const storedSession = sessionStorage.getItem(SESSION_STORAGE_KEY);
+  if (!storedSession) {
+    return null;
+  }
+
+  const session = JSON.parse(storedSession);
+  return session && typeof session.token === 'string' && session.user ? session : null;
 }
 
 function getCurrentUserEmail() {
   const session = getSession();
-  return session && typeof session.email === 'string' ? session.email : null;
+  return session && typeof session.user.email === 'string' ? session.user.email : null;
 }
 
 function getFavorites() {
-  const email = getCurrentUserEmail();
-  if (!email) {
-    return [];
-  }
-
-  const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
-  if (!storedFavorites) {
-    return [];
-  }
-
-  const favoritesByUser = JSON.parse(storedFavorites);
-  const favorites = favoritesByUser[email];
-  if (!Array.isArray(favorites) || favorites.some(id => typeof id !== 'string')) {
-    throw new Error('Stored favorites are invalid');
-  }
-
-  return favorites;
+  return favouriteRestaurantId ? [favouriteRestaurantId] : [];
 }
 
-function saveFavorites(favorites) {
-  const email = getCurrentUserEmail();
-  if (!email) {
-    return;
-  }
-
-  const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
-  const favoritesByUser = storedFavorites ? JSON.parse(storedFavorites) : {};
-  favoritesByUser[email] = favorites;
-  localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoritesByUser));
+function setFavouriteRestaurant(user) {
+  const favouriteRestaurant = user && user.favouriteRestaurant;
+  favouriteRestaurantId = typeof favouriteRestaurant === 'string'
+    ? favouriteRestaurant
+    : favouriteRestaurant && typeof favouriteRestaurant._id === 'string'
+      ? favouriteRestaurant._id
+      : null;
 }
 
 function createFavoriteButton(restaurant, isFavorite) {
@@ -355,28 +475,40 @@ function updateFavoriteButton(button, restaurant, isFavorite) {
   button.title = isLoggedIn ? (isFavorite ? 'Remove from favorites' : 'Add to favorites') : 'Log in to favorite';
 }
 
-function toggleFavorite(restaurantId) {
+async function toggleFavorite(restaurantId) {
   if (!getCurrentUserEmail()) {
     openLoginButton.click();
     return;
   }
 
   try {
-    const favorites = getFavorites();
-    const favoriteIndex = favorites.indexOf(restaurantId);
-    if (favoriteIndex === -1) {
-      favorites.push(restaurantId);
-    } else {
-      favorites.splice(favoriteIndex, 1);
+    const nextFavouriteRestaurantId = favouriteRestaurantId === restaurantId ? null : restaurantId;
+    const response = await requestAuth('/users', {
+      method: 'PUT',
+      body: JSON.stringify(nextFavouriteRestaurantId
+        ? {favouriteRestaurant: nextFavouriteRestaurantId}
+        : {$unset: {favouriteRestaurant: 1}}),
+    });
+    if (!response.ok) {
+      throw new Error(await getApiError(response, 'The favorite restaurant could not be updated.'));
     }
 
-    saveFavorites(favorites);
+    const responseBody = await response.text();
+    const result = responseBody ? JSON.parse(responseBody) : null;
+    setFavouriteRestaurant(result && result.data
+      ? result.data
+      : {favouriteRestaurant: nextFavouriteRestaurantId});
     renderRestaurantList(searchInput.value);
     if (selectedRestaurant && selectedRestaurant._id === restaurantId) {
-      updateFavoriteButton(menuFavoriteButton, selectedRestaurant, favorites.includes(restaurantId));
+      updateFavoriteButton(
+        menuFavoriteButton,
+        selectedRestaurant,
+        favouriteRestaurantId === restaurantId,
+      );
     }
   } catch (error) {
     console.error(error);
+    showLocationMessage(error.message || 'The favorite restaurant could not be updated. Please try again later.', true);
   }
 }
 
@@ -478,6 +610,19 @@ function showAuthMessage(message, isError = false) {
   authMessage.classList.toggle('is-error', isError);
 }
 
+function showAccountSettingsMessage(message, isError = false) {
+  accountSettingsMessage.textContent = message;
+  accountSettingsMessage.classList.toggle('is-error', isError);
+}
+
+function populateAccountSettings() {
+  const session = getSession();
+  accountEmailInput.value = session && session.user.email ? session.user.email : '';
+  accountPasswordInput.value = '';
+  accountPasswordConfirmInput.value = '';
+  showAccountSettingsMessage('');
+}
+
 function renderAuthView() {
   let session = null;
   try {
@@ -487,16 +632,22 @@ function renderAuthView() {
     showAuthMessage('Authentication is unavailable in this browser. Please try again later.', true);
   }
 
-  const isLoggedIn = Boolean(session && session.email);
+  const isLoggedIn = Boolean(session && session.user && session.user.username);
   loggedInView.hidden = !isLoggedIn;
   loginForm.hidden = isLoggedIn;
   authSwitchButton.parentElement.hidden = isLoggedIn;
-  openLoginButton.setAttribute('aria-label', isLoggedIn ? `Logged in as ${session.email}` : 'Open login form');
+  if (!isLoggedIn) {
+    accountSettings.hidden = true;
+    accountSettingsToggle.setAttribute('aria-expanded', 'false');
+  }
+  openLoginButton.setAttribute('aria-label', isLoggedIn
+    ? `Logged in as ${session.user.username}`
+    : 'Open login form');
 
   if (isLoggedIn) {
     authEyebrow.textContent = 'Your account';
     loginTitle.textContent = 'You are logged in';
-    loggedInMessage.textContent = session.email;
+    loggedInMessage.textContent = session.user.username;
     return;
   }
 
@@ -508,7 +659,40 @@ function renderAuthView() {
   passwordConfirmLabel.hidden = authMode !== 'register';
   passwordConfirmInput.hidden = authMode !== 'register';
   passwordConfirmInput.required = authMode === 'register';
+  emailLabel.hidden = authMode !== 'register';
+  emailInput.hidden = authMode !== 'register';
+  emailInput.required = authMode === 'register';
   showAuthMessage('');
+}
+
+async function validateSession() {
+  try {
+    if (!getSession()) {
+      return;
+    }
+
+    const response = await requestAuth('/users/token');
+    if (!response.ok) {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      favouriteRestaurantId = null;
+      renderAuthView();
+      renderRestaurantList(searchInput.value);
+      return;
+    }
+
+    const user = await response.json();
+    const session = getSession();
+    if (session && user && user.username) {
+      setFavouriteRestaurant(user);
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+        token: session.token,
+        user,
+      }));
+      renderRestaurantList(searchInput.value);
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function renderCourses(courses) {
@@ -686,4 +870,6 @@ async function loadRestaurants() {
   }
 }
 
+renderAuthView();
+validateSession();
 loadRestaurants();

@@ -220,6 +220,8 @@ body {
   border-radius: 18px;
   box-shadow: var(--shadow);
   max-width: 380px;
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
   padding: 28px;
   width: 100%;
 }
@@ -242,8 +244,35 @@ body {
 }
 
 .login-form[hidden],
-.auth-switch[hidden] {
+.auth-switch[hidden],
+.account-settings[hidden] {
   display: none;
+}
+
+.account-settings {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.account-settings h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.account-settings-toggle {
+  display: block;
+  margin: 12px auto 0;
+}
+
+.account-settings-cancel {
+  display: block;
+  margin: 12px auto 0;
+}
+
+.account-settings .login-form {
+  margin-top: 16px;
 }
 
 .login-form label {
