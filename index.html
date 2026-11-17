@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+  <!-- Document metadata and external resources used by the map application. -->
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,25 +10,28 @@
 
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="main.js" defer></script>
 </head>
 
 <body>
+  <!-- The app shell layers the map, panels, and modal dialogs in one viewport. -->
   <main class="app-shell">
+    <!-- Leaflet renders the interactive restaurant map into this element. -->
     <div id="map" aria-label="Map showing student restaurants"></div>
 
-    <button class="account-button" id="open-login" type="button" aria-label="Open login form" aria-controls="login-modal"
-      aria-expanded="false">
+    <!-- Floating control for opening the login and account-management modal. -->
+    <button class="account-button" id="open-login" type="button" aria-label="Open login form" aria-controls="login-modal" aria-expanded="false">
       <svg aria-hidden="true" viewBox="0 0 24 24">
+        <!-- User icon drawn with coordinates -->
         <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.28 0-7.75 2.18-7.75 4.88 0 .76.62 1.37 1.38 1.37h12.74c.76 0 1.38-.61 1.38-1.37 0-2.7-3.47-4.88-7.75-4.88Z" />
       </svg>
     </button>
 
+    <!-- Authentication modal: login and registration share the same form. -->
     <section class="login-modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
       <div class="login-card">
+        <!-- Modal heading and close control. -->
         <div class="login-header">
           <div>
             <p class="eyebrow" id="auth-eyebrow">Welcome back</p>
@@ -37,6 +41,8 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
+
+        <!-- Fields are shown or hidden by auth.js depending on the current mode. -->
         <form class="login-form" id="login-form">
           <label for="login-username">Username</label>
           <input id="login-username" name="username" type="text" autocomplete="username" required>
@@ -53,16 +59,21 @@
           <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
           <button class="login-submit" id="auth-submit" type="submit">Log in</button>
         </form>
+
+        <!-- Switch between login and account-creation modes. -->
         <p class="auth-switch">
           <span id="auth-switch-prompt">New here?</span>
           <button class="auth-switch-button" id="auth-switch-button" type="button">Create an account</button>
         </p>
+
+        <!-- Logged-in controls replace the login form after authentication. -->
         <div class="logged-in-view" id="logged-in-view" hidden>
           <p class="auth-message" id="logged-in-message"></p>
-          <button class="auth-switch-button account-settings-toggle" id="account-settings-toggle"
-            type="button" aria-expanded="false" aria-controls="account-settings">Account settings</button>
+          <button class="auth-switch-button account-settings-toggle" id="account-settings-toggle" type="button" aria-expanded="false" aria-controls="account-settings">Account settings</button>
           <button class="login-submit logout-button" id="logout-button" type="button">Log out</button>
         </div>
+
+        <!-- Optional account update form for changing email or password. -->
         <div class="account-settings" id="account-settings" hidden>
           <h3>Account settings</h3>
           <form class="login-form" id="account-settings-form">
@@ -73,20 +84,20 @@
             <input id="account-password" name="password" type="password" autocomplete="new-password">
 
             <label for="account-password-confirm">Confirm new password</label>
-            <input id="account-password-confirm" name="passwordConfirm" type="password"
-              autocomplete="new-password">
+            <input id="account-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password">
 
             <p class="auth-message" id="account-settings-message" role="status" aria-live="polite"></p>
             <button class="login-submit" id="account-settings-submit" type="submit">Save changes</button>
-            <button class="auth-switch-button account-settings-cancel" id="account-settings-cancel"
-              type="button">Cancel</button>
+            <button class="auth-switch-button account-settings-cancel" id="account-settings-cancel" type="button">Cancel</button>
           </form>
         </div>
       </div>
     </section>
 
+    <!-- Menu modal populated dynamically from the selected restaurant's API data. -->
     <section class="menu-modal" id="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-title" hidden>
       <div class="menu-card">
+        <!-- Restaurant identity, favorite action, and close control. -->
         <div class="menu-header">
           <div>
             <p class="eyebrow">Daily menu</p>
@@ -94,28 +105,30 @@
             <p class="menu-address" id="menu-address"></p>
           </div>
           <div class="menu-header-actions">
-            <button class="favorite-button menu-favorite-button" id="menu-favorite-button" type="button"
-              aria-label="Favorite restaurant" aria-pressed="false">☆</button>
+            <button class="favorite-button menu-favorite-button" id="menu-favorite-button" type="button" aria-label="Favorite restaurant" aria-pressed="false">☆</button>
             <button class="icon-button" id="close-menu" type="button" aria-label="Close daily menu">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
         </div>
+        <!-- Toggle between daily and weekly menu API responses. -->
         <div class="menu-type-buttons" role="group" aria-label="Menu period">
           <button class="menu-type-button is-active" id="daily-menu-button" type="button">Daily menu</button>
           <button class="menu-type-button" id="weekly-menu-button" type="button">Weekly menu</button>
         </div>
+        <!-- Toggle the language used for the menu API request. -->
         <div class="menu-language-buttons" role="group" aria-label="Menu language">
-          <button class="menu-language-button is-active" id="english-menu-button" type="button"
-            aria-label="Show menu in English" title="English">🇬🇧</button>
-          <button class="menu-language-button" id="finnish-menu-button" type="button"
-            aria-label="Näytä ruokalista suomeksi" title="Suomi">🇫🇮</button>
+          <button class="menu-language-button is-active" id="english-menu-button" type="button" aria-label="Show menu in English" title="English">🇬🇧</button>
+          <button class="menu-language-button" id="finnish-menu-button" type="button" aria-label="Näytä ruokalista suomeksi" title="Suomi">🇫🇮</button>
         </div>
+        <!-- Loading, empty, error, and course content are rendered here by menu.js. -->
         <div class="menu-content" id="menu-content" aria-live="polite"></div>
       </div>
     </section>
 
+    <!-- Main restaurant browser containing search, results, and location actions. -->
     <aside class="restaurant-panel" id="restaurant-panel" aria-label="Restaurant search">
+      <!-- Panel title and control for collapsing the list over the map. -->
       <div class="panel-header">
         <div>
           <p class="eyebrow">Explore Finland</p>
@@ -127,16 +140,18 @@
         </button>
       </div>
 
+      <!-- Search input and controls for clearing or finding the nearest restaurant. -->
       <div class="search-wrap">
         <label class="sr-only" for="restaurant-search">Search restaurants</label>
         <span class="search-icon" aria-hidden="true">&#9906;</span>
         <input id="restaurant-search" type="search" placeholder="Search by name, city or company" autocomplete="off">
-        <button class="location-button" id="find-nearest" type="button" aria-label="Find nearest restaurant"
-          title="Find nearest restaurant">&#8982;</button>
+        <button class="location-button" id="find-nearest" type="button" aria-label="Find nearest restaurant" title="Find nearest restaurant">&#8982;</button>
         <button class="clear-search" id="clear-search" type="button" aria-label="Clear search">&times;</button>
       </div>
+      <!-- Status messages announce location and other panel-level feedback. -->
       <p class="location-message" id="location-message" role="status" aria-live="polite"></p>
 
+      <!-- Result count and dynamically generated restaurant cards. -->
       <div class="results-heading">
         <h2>Restaurants</h2>
         <span id="restaurant-count" aria-live="polite"></span>
@@ -145,6 +160,7 @@
       <p class="empty-state" id="empty-state">Loading restaurants...</p>
     </aside>
 
+    <!-- Reopens the restaurant panel after it has been collapsed. -->
     <button class="show-panel" id="show-panel" type="button">
       <span aria-hidden="true">&#9776;</span>
       <span>Restaurants</span>
