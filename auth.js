@@ -113,6 +113,15 @@ export function initAuth({rerenderRestaurants}) {
     setFavouriteRestaurant(result.data);
   }
 
+  async function isUsernameTaken(username) {
+    const response = await requestAuth(`/users/available/${encodeURIComponent(username)}`);
+    if (!response.ok) {
+      return null;
+    }
+    const result = await response.json();
+    return result.available !== true;
+  }
+
     // Validate login/registration input, call the API, and refresh dependent views.
   async function handleLoginSubmit(event) {
     event.preventDefault();
@@ -146,13 +155,23 @@ export function initAuth({rerenderRestaurants}) {
           body: JSON.stringify({username, password, email}),
         });
         if (!registerResponse.ok) {
-          throw new Error(await getApiError(registerResponse, 'Registration failed.'));
-        }
-        const registration = await registerResponse.json();
-        if (registration.data && registration.data.activated === false) {
-          loginForm.reset();
-          showAuthMessage('Account created. Please activate it using the email from the service.');
-          return;
+          const registrationError = await getApiError(registerResponse, 'Registration failed.');
+          const accountWasCreated = await isUsernameTaken(username);
+          if (accountWasCreated === true) {
+            try {
+              await login(username, password);
+              loginForm.reset();
+              showAuthMessage('Account created. You are now logged in.');
+              renderAuthView();
+              rerenderRestaurants();
+              return;
+            } catch (loginError) {
+              loginForm.reset();
+              showAuthMessage('Account created, but automatic login failed. Please log in with the new account.');
+              return;
+            }
+          }
+          throw new Error(registrationError);
         }
         await login(username, password);
         showAuthMessage('Account created. You are now logged in.');
